@@ -42,6 +42,8 @@ class Player(pygame.sprite.Sprite):
         self.speedx = 0
         self.speedy = 0
 
+        self.angle = 0
+
     def update (self):
         #Movement
         self.speedx = 0
@@ -72,23 +74,39 @@ class Player(pygame.sprite.Sprite):
                 self.rect.top = 0
 
         #Rotation
-##        from math import atan2, degrees, pi
-##        
-##        mousePos = pygame.mouse.get_pos()
-##        dx = self.rect.centerx - mousePos[0]
-##        dy = self.rect.centery - mousePos[1]
-##        radian = atan2(-dy,dx)
-##        radian %= 2*pi
-##        deg = degrees(radian)
-##
-##        angle = 0
-##        angle += deg
-##
-##        if angle != degs:
-##            self.image = pygame.transform.rotate(self.image, deg)
+        from math import atan2, degrees
+        
+        mousePos = pygame.mouse.get_pos()
+        dx = self.rect.centerx - mousePos[0]
+        dy = self.rect.centery - mousePos[1]
+        deg = degrees(atan2(-dy,dx))
+        
+        if self.angle != deg:
+            self.image = pygame.transform.rotate(playerImg, deg + 90)
+            self.angle = deg
             
         
+class Pistol():
+
+    def __init__ (self, x, y):
+        self.x = x
+        self.y = y
+        self.mousePos = pygame.mouse.get_pos()
+
+        #Sets up direction for shot
+        from math import atan2, cos, sin
         
+        angle = atan2((self.mousePos[1] - self.y), (self.mousePos[0] - self.x))
+        self.bulletDx = 10 * cos(angle)
+        self.bulletDy = 10 * sin(angle)
+
+    def draw (self):
+        pygame.draw.rect (screen, (255,255,255), Rect(self.x, self.y, 10, 10), 0)
+        
+
+    def move (self):
+        self.x += self.bulletDx
+        self.y += self.bulletDy
         
 
 ##Frontend variables
@@ -99,6 +117,10 @@ all_sprites_list = pygame.sprite.Group()
 #Player
 player = Player()
 all_sprites_list.add(player)
+
+#Bullets/guns
+bullets = []
+bulletTime = time.time() - 0.5
 
 ##Game loop
 while True:
@@ -115,6 +137,27 @@ while True:
     #Draw
     screen.fill(black)
     all_sprites_list.draw(screen)
+
+
+    
+    
+    
+    #Fire pistol bullets
+    if event.type == pygame.MOUSEBUTTONDOWN and time.time() - bulletTime > 0.5:
+        bullets.append(Pistol(player.rect.centerx, player.rect.centery))
+
+        
+
+        bulletTime = time.time()
+
+    b = 0
+    while b < len(bullets):
+        bullets[b].draw()
+
+        bullets[b].move()
+
+        b += 1
+
 
 
 
