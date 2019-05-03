@@ -12,8 +12,8 @@ white = (255, 255, 255)
 blue = (50, 50, 255)
 
 #Screen
-width = 1280
-height = 720
+width = 1600
+height = 900
 screen = pygame.display.set_mode((width, height))
 
 #Clock/time
@@ -25,7 +25,13 @@ pygame.font.init()
 ##Background Variables
 #Images
 playerImg = pygame.image.load("playerCharacterRun1.png")
-playerImg.set_colorkey((255,255,255))
+playerImg = pygame.transform.scale(playerImg, (50, 40))
+
+enemyImg = pygame.image.load("enemy.png")
+
+pistolBullet = pygame.image.load("pistol.png")
+pistolBullet = pygame.transform.scale(pistolBullet, (5, 5))
+
 
 
 ##Classes
@@ -52,13 +58,13 @@ class Player(pygame.sprite.Sprite):
         keystate = pygame.key.get_pressed()
         
         if keystate[K_a]:
-                self.speedx = -5
+                self.speedx = -3
         if keystate[K_d]:
-                self.speedx = 5
+                self.speedx = 3
         if keystate[K_w]:
-                self.speedy = -5
+                self.speedy = -3
         if keystate[K_s]:
-                self.speedy = 5
+                self.speedy = 3
 
         self.rect.x += self.speedx
         self.rect.y += self.speedy
@@ -82,31 +88,77 @@ class Player(pygame.sprite.Sprite):
         deg = degrees(atan2(-dy,dx))
         
         if self.angle != deg:
-            self.image = pygame.transform.rotate(playerImg, deg + 90)
+            self.image = pygame.transform.rotate(playerImg, deg + 180)
+            
             self.angle = deg
+
+        
+
+
+class Guard(pygame.sprite.Sprite):
+
+    def __init__ (self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = enemyImg
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = random.randint (0, 1600)
+        self.rect.centery = random.randint (0, 900)
+        
+
+    def update (self):
+        #Movement
+        targetX = player.rect.centerx
+        targetY = player.rect.centery
+
+        from math import atan2, cos, sin
+        
+        angle = atan2((targetY - self.rect.centery), (targetX - self.rect.centerx))
+        moveDx = 2 * cos(angle)
+        moveDy = 2 * sin(angle)
+
+        self.rect.centerx += moveDx
+        self.rect.centery += moveDy
+        
+
+        
+    
+    
+
+
+    
+    
             
         
-class Pistol():
+class Pistol(pygame.sprite.Sprite):
 
     def __init__ (self, x, y):
-        self.x = x
-        self.y = y
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pistolBullet
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.centery = y
         self.mousePos = pygame.mouse.get_pos()
+        
 
         #Sets up direction for shot
         from math import atan2, cos, sin
         
-        angle = atan2((self.mousePos[1] - self.y), (self.mousePos[0] - self.x))
+        angle = atan2((self.mousePos[1] - self.rect.centery), (self.mousePos[0] - self.rect.centerx))
         self.bulletDx = 10 * cos(angle)
         self.bulletDy = 10 * sin(angle)
 
-    def draw (self):
-        pygame.draw.rect (screen, (255,255,255), Rect(self.x, self.y, 10, 10), 0)
+    def update(self):
+        self.rect.centerx += self.bulletDx
+        self.rect.centery += self.bulletDy
         
 
-    def move (self):
-        self.x += self.bulletDx
-        self.y += self.bulletDy
+    
+        
+
+
+
         
 
 ##Frontend variables
@@ -118,8 +170,16 @@ all_sprites_list = pygame.sprite.Group()
 player = Player()
 all_sprites_list.add(player)
 
+#Enemies
+enemies = pygame.sprite.Group()
+
+for i in range(6):
+        g = Guard()
+        enemies.add(g)
+        all_sprites_list.add(g)
+
 #Bullets/guns
-bullets = []
+bullets = pygame.sprite.Group()
 bulletTime = time.time() - 0.5
 
 ##Game loop
@@ -140,23 +200,30 @@ while True:
 
 
     
-    
+    mouse = pygame.mouse.get_pressed()
     
     #Fire pistol bullets
-    if event.type == pygame.MOUSEBUTTONDOWN and time.time() - bulletTime > 0.5:
-        bullets.append(Pistol(player.rect.centerx, player.rect.centery))
+    if mouse[0] == True and time.time() - bulletTime > 0.2:
+        bullet = Pistol(player.rect.centerx, player.rect.centery)
+        bullets.add(bullet)
+        all_sprites_list.add(bullet)
 
         
 
         bulletTime = time.time()
 
-    b = 0
-    while b < len(bullets):
-        bullets[b].draw()
 
-        bullets[b].move()
+    
+        
+        
 
-        b += 1
+    hits = pygame.sprite.groupcollide(enemies, bullets, True, True)
+    for hit in hits:
+        g = Guard()
+        enemies.add(g)
+        all_sprites_list.add(g)
+        
+        
 
 
 
