@@ -10,6 +10,9 @@ pygame.display.set_caption("Hoard mode")
 black = (0, 0, 0)
 white = (255, 255, 255)
 blue = (50, 50, 255)
+green = (128, 249, 22)
+red = (249, 25, 21)
+
 
 #Screen
 width = 1600
@@ -21,15 +24,17 @@ clock = pygame.time.Clock()
 
 #Font
 pygame.font.init()
+font = pygame.font.SysFont ("arial", 20)
 
 ##Background Variables
 #Images
-playerImg = pygame.image.load("playerCharacterRun1.png")
+playerImg = pygame.image.load("playerCharacterRun1.png").convert_alpha()
 playerImg = pygame.transform.scale(playerImg, (50, 40))
 
 enemyImg = pygame.image.load("enemy.png")
+enemyImg= pygame.transform.scale(enemyImg, (256, 256)).convert_alpha()
 
-pistolBullet = pygame.image.load("pistol.png")
+pistolBullet = pygame.image.load("pistol.png").convert_alpha()
 pistolBullet = pygame.transform.scale(pistolBullet, (5, 5))
 
 
@@ -162,6 +167,13 @@ class Pistol(pygame.sprite.Sprite):
         
 
 ##Frontend variables
+#Health
+health = 100
+enemyTime = bulletTime = time.time() - 0.5
+
+#Score
+score = 0
+
 #Sprite lists
 all_sprites_list = pygame.sprite.Group()
 
@@ -195,18 +207,35 @@ while True:
     all_sprites_list.update()
 
     #Draw
-    screen.fill(black)
+    screen.fill(blue)
     all_sprites_list.draw(screen)
 
+    #Health
+    if health > 25:
+        pygame.draw.rect(screen, green, Rect(5, 30, health * 2, 15), 0)
+        
+    elif health <= 25 and health > 0:
+        pygame.draw.rect(screen, red, Rect(5, 30, health * 2, 15), 0)
+
+    elif health <= 0:
+        all_sprites_list.remove(player)
+        screen.blit(font.render("GAME OVER", True, (90,255,255)), (350,200))
+        screen.blit(font.render("SCORE: " + str(score), True, (90,255,255)), (350,250))
+
+    #Score
+    screen.blit(font.render("Score: " + str(score), True, (255,255,255)), (5,5))
+    
+
+    mouse = pygame.mouse.get_pressed()
 
     
-    mouse = pygame.mouse.get_pressed()
     
     #Fire pistol bullets
     if mouse[0] == True and time.time() - bulletTime > 0.2:
         bullet = Pistol(player.rect.centerx, player.rect.centery)
         bullets.add(bullet)
         all_sprites_list.add(bullet)
+        
 
         
 
@@ -216,13 +245,23 @@ while True:
     
         
         
-
-    hits = pygame.sprite.groupcollide(enemies, bullets, True, True)
+    #Enemy bullet collision
+    hits = pygame.sprite.groupcollide(enemies, bullets, True, True, pygame.sprite.collide_mask)
     for hit in hits:
         g = Guard()
         enemies.add(g)
         all_sprites_list.add(g)
+        score += 10
+
+
+    #Enemy attacks
+    attacks = pygame.sprite.spritecollide(player, enemies, False, pygame.sprite.collide_mask)
+    if attacks and time.time() - enemyTime > 0.5:
+        health -= 10
+        print(health)
         
+        enemyTime = time.time()
+    
         
 
 
