@@ -37,6 +37,9 @@ enemyImg= pygame.transform.scale(enemyImg, (256, 256)).convert_alpha()
 pistolBullet = pygame.image.load("pistol.png").convert_alpha()
 pistolBullet = pygame.transform.scale(pistolBullet, (5, 5))
 
+medkitImg = pygame.image.load("medkit.png").convert_alpha()
+medkitImg = pygame.transform.scale(medkitImg, (64, 32))
+
 
 
 ##Classes
@@ -109,6 +112,7 @@ class Guard(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.centerx = random.randint (0, 1600)
         self.rect.centery = random.randint (0, 900)
+        self.stopped = False
         
 
     def update (self):
@@ -116,20 +120,48 @@ class Guard(pygame.sprite.Sprite):
         targetX = player.rect.centerx
         targetY = player.rect.centery
 
-        from math import atan2, cos, sin
-        
-        angle = atan2((targetY - self.rect.centery), (targetX - self.rect.centerx))
-        moveDx = 2 * cos(angle)
-        moveDy = 2 * sin(angle)
+        from math import atan2, cos, sin, degrees
 
-        self.rect.centerx += moveDx
-        self.rect.centery += moveDy
-        
+        if self.stopped == False:
+            
+            angle = atan2((targetY - self.rect.centery), (targetX - self.rect.centerx))
+            moveDx = 2 * cos(angle)
+            moveDy = 2 * sin(angle)
 
+            self.rect.centerx += moveDx
+            self.rect.centery += moveDy
+
+        #Rotation
+        rotateAngle = atan2(-(targetY - self.rect.centery), (targetX - self.rect.centerx))
+        deg = degrees(rotateAngle)
         
+        if rotateAngle != deg:
+            self.image = pygame.transform.rotate(enemyImg, deg)
+            
+            rotateAngle = deg
+
+
+        self.stopped = False
     
     
 
+class medkit(pygame.sprite.Sprite):
+
+    def __init__ (self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = medkitImg
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = random.randint (0, 1600)
+        self.rect.centery = random.randint (0, 900)
+        self.deleteTimer = time.time()
+
+    def update(self):
+        if time.time() - self.deleteTimer >= 15:
+            self.kill()
+
+    
+    
 
     
     
@@ -166,7 +198,7 @@ class Pistol(pygame.sprite.Sprite):
 
         
 
-##Frontend variables
+####Frontend variables
 #Health
 health = 100
 enemyTime = bulletTime = time.time() - 0.5
@@ -174,15 +206,15 @@ enemyTime = bulletTime = time.time() - 0.5
 #Score
 score = 0
 
-#Sprite lists
+###Sprite lists
 all_sprites_list = pygame.sprite.Group()
 
 
-#Player
+##Player
 player = Player()
 all_sprites_list.add(player)
 
-#Enemies
+##Enemies
 enemies = pygame.sprite.Group()
 
 for i in range(6):
@@ -190,11 +222,20 @@ for i in range(6):
         enemies.add(g)
         all_sprites_list.add(g)
 
-#Bullets/guns
+##Bullets/guns
 bullets = pygame.sprite.Group()
-bulletTime = time.time() - 0.5
+bulletTime = time.time()
 
-##Game loop
+
+##Pickups
+#Pickup timer
+pickupTime = time.time() - 0.5
+
+#Medkit
+medkits = pygame.sprite.Group()
+
+
+####Game loop
 while True:
 
     clock.tick(50)
@@ -253,9 +294,16 @@ while True:
         all_sprites_list.add(g)
         score += 10
 
+    
 
-    #Enemy attacks
+    ##Enemy attacks
+    #Stops enemy when attacking
     attacks = pygame.sprite.spritecollide(player, enemies, False, pygame.sprite.collide_mask)
+    for attack in range(len(attacks)):
+        attacks[attack].stopped = True
+
+    
+    #Damages player   
     if attacks and time.time() - enemyTime > 0.5:
         health -= 10
         print(health)
@@ -264,7 +312,18 @@ while True:
     
         
 
+    ##Player pickups
+    if time.time() - pickupTime  >= 10:
+        p = medkit()
+        medkits.add(p)
+        all_sprites_list.add(p)
 
+        pickupTime = time.time()
+
+    #Medkit pickup/heal
+    heals = pygame.sprite.spritecollide(player, medkits, True, pygame.sprite.collide_mask)
+    if heals:
+        health = 100
 
 
         
