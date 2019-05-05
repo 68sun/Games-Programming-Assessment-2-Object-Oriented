@@ -40,6 +40,12 @@ pistolBullet = pygame.transform.scale(pistolBullet, (5, 5))
 medkitImg = pygame.image.load("medkit.png").convert_alpha()
 medkitImg = pygame.transform.scale(medkitImg, (64, 32))
 
+shotgunPickup = pygame.image.load("shotgunPickup.png").convert_alpha()
+shotgunPickup = pygame.transform.scale(shotgunPickup, (64, 32))
+
+flamethrowerPickup = pygame.image.load("flamethrowerPickup.png").convert_alpha()
+flamethrowerPickup =pygame.transform.scale(flamethrowerPickup, (64, 32))
+
 
 
 ##Classes
@@ -160,6 +166,37 @@ class medkit(pygame.sprite.Sprite):
         if time.time() - self.deleteTimer >= 15:
             self.kill()
 
+
+class shotPickup(pygame.sprite.Sprite):
+
+    def __init__ (self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = shotgunPickup
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = random.randint (0, 1600)
+        self.rect.centery = random.randint (0, 900)
+        self.deleteTimer = time.time()
+
+    def update(self):
+        if time.time() - self.deleteTimer >= 15:
+            self.kill()
+
+
+class flamePickup(pygame.sprite.Sprite):
+
+    def __init__ (self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = flamethrowerPickup
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = random.randint (0, 1600)
+        self.rect.centery = random.randint (0, 900)
+        self.deleteTimer = time.time()
+
+    def update(self):
+        if time.time() - self.deleteTimer >= 15:
+            self.kill()
     
     
 
@@ -233,6 +270,12 @@ pickupTime = time.time() - 0.5
 
 #Medkit
 medkits = pygame.sprite.Group()
+
+#Shotguns
+shotguns = pygame.sprite.Group()
+
+#Flamethrowers
+flamethrowers = pygame.sprite.Group()
 
 
 ####Game loop
@@ -313,10 +356,28 @@ while True:
         
 
     ##Player pickups
-    if time.time() - pickupTime  >= 10:
-        p = medkit()
-        medkits.add(p)
-        all_sprites_list.add(p)
+    if time.time() - pickupTime  >= 0.5:
+        #Random int to select pickup
+        p = random.randint(1, 3)
+
+        #Medkit
+        if p == 1:
+            m = medkit()
+            medkits.add(m)
+            all_sprites_list.add(m)
+
+        #Shotgun
+        elif p == 2:
+            s = shotPickup()
+            shotguns.add(s)
+            all_sprites_list.add(s)
+
+        elif p == 3:
+            f = flamePickup()
+            flamethrowers.add(f)
+            all_sprites_list.add(f)
+        
+        
 
         pickupTime = time.time()
 
