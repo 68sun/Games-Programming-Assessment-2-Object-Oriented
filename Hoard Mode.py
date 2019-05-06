@@ -447,25 +447,25 @@ while True:
         #Press r to restart
         if keystate[K_r]:
 
+
+
             #Sprite group resets
             all_sprites_list.empty()
             all_sprites_list.clear(screen, screenReset)
-
-            #Resets enemies
-            for i in range(6):
-                g = Guard()
-                enemies.add(g)
-                all_sprites_list.add(g)
+            enemies.empty()
+            enemies.clear(screen, screenReset)
+            
 
             
 
             #Variable resets
+            wave = 0
             player = Player()
             all_sprites_list.add(player)
             score = 0
             health = 100
             gunType = 1
-            wave = 1
+            
 
         #Press escape to quit
         if keystate[K_ESCAPE]:
