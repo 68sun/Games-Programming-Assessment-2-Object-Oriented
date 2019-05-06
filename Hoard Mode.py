@@ -328,10 +328,13 @@ all_sprites_list.add(player)
 ##Enemies
 enemies = pygame.sprite.Group()
 
-for i in range(6):
-        g = Guard()
-        enemies.add(g)
-        all_sprites_list.add(g)
+#Waves
+wave = 1
+newWave = True
+
+#Break between waves
+waveBreakTime = time.time()
+
 
 ##Bullets/guns
 bullets = pygame.sprite.Group()
@@ -414,6 +417,7 @@ while True:
             score = 0
             health = 100
             gunType = 1
+            wave = 1
 
 
 
@@ -493,17 +497,43 @@ while True:
         screen.blit(font.render("Ammo: " + str(flamethrowerAmmo), True, (255,255,255)), (700,30))
 
     
+
+
+
+    ##Enemies
+    #Show wave
+    screen.blit(font.render("Wave: " + str(wave), True, (255,255,255)), (5,60))
+
+    ##Spawn enemies
+    if newWave == True:
+        for i in range(wave*2):
+            g = Guard()
+            enemies.add(g)
+            all_sprites_list.add(g)
+
+        newWave = False
         
+
         
     #Enemy bullet collision
     hits = pygame.sprite.groupcollide(enemies, bullets, True, True, pygame.sprite.collide_mask)
     for hit in hits:
-        g = Guard()
-        enemies.add(g)
-        all_sprites_list.add(g)
         score += 10
 
-    
+        #Time reset for next wave
+        waveBreakTime = time.time()
+
+    #Toggles next wave when all enemies killed
+    if not enemies:
+        #Displays time to the next wave
+        screen.blit(font.render("Time to next wave: ", True, (255,255,255)), (700,60))
+        screen.blit(font.render(str(-round(waveBreakTime - time.time(), 2)), True, (255,255,255)), (740,100))
+        
+        #Starts new wave after break interval
+        if time.time() - waveBreakTime > 5:
+            wave += 1
+            newWave = True
+        
 
     ##Enemy attacks
     #Stops enemy when attacking
