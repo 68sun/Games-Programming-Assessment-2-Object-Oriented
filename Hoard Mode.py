@@ -6,6 +6,9 @@ from pygame.locals import *
 pygame.init()
 pygame.display.set_caption("Hoard mode")
 
+#Music initialise
+pygame.mixer.pre_init(44100, - 16, 2, 2048)
+
 #Colours
 black = (0, 0, 0)
 white = (255, 255, 255)
@@ -27,31 +30,72 @@ clock = pygame.time.Clock()
 pygame.font.init()
 font = pygame.font.SysFont ("arial", 20)
 
-##Background Variables
-#Images
+####Background Variables
+###Images
+##Player
 playerImg = pygame.image.load("playerCharacterRun1.png").convert_alpha()
 playerImg = pygame.transform.scale(playerImg, (50, 40))
 
+##Enemy
 enemyImg = pygame.image.load("enemy.png")
 enemyImg= pygame.transform.scale(enemyImg, (256, 256)).convert_alpha()
 
+##Bullets
+#Pistol
 pistolBullet = pygame.image.load("bullet.png").convert_alpha()
 pistolBullet = pygame.transform.scale(pistolBullet, (5, 5))
 
+#Shotgun
 shotgunBullet = pygame.image.load("bullet.png").convert_alpha()
 shotgunBullet = pygame.transform.scale(shotgunBullet, (10, 10))
 
+#Flamethrower
 flamethrowerBullet = pygame.image.load("fire.png").convert_alpha()
 flamethrowerBullet = pygame.transform.scale(flamethrowerBullet, (16, 22))
 
+##Pickups
+#Medkit
 medkitImg = pygame.image.load("medkit.png").convert_alpha()
 medkitImg = pygame.transform.scale(medkitImg, (64, 32))
 
+#Shotgun
 shotgunPickup = pygame.image.load("shotgunPickup.png").convert_alpha()
 shotgunPickup = pygame.transform.scale(shotgunPickup, (64, 32))
 
+#Flamethrower
 flamethrowerPickup = pygame.image.load("flamethrowerPickup.png").convert_alpha()
 flamethrowerPickup =pygame.transform.scale(flamethrowerPickup, (64, 32))
+
+
+##Sound
+#Background music
+pygame.mixer.music.load('background.wav')
+background = pygame.mixer.Sound("background.wav")
+
+
+#Pistol
+pygame.mixer.music.load("pistol.wav")
+pistolSound = pygame.mixer.Sound("pistol.wav")
+
+#Shotgun
+pygame.mixer.music.load("shotgun.wav")
+shotgunSound = pygame.mixer.Sound("shotgun.wav")
+
+#Flamethrower
+pygame.mixer.music.load("flamethrower.ogg")
+flamethrowerSound = pygame.mixer.Sound("flamethrower.ogg")
+
+#Pickup
+pygame.mixer.music.load("pickup.wav")
+pickupSound = pygame.mixer.Sound("pickup.wav")
+
+#Enemy hit sound
+pygame.mixer.music.load("enemy.wav")
+enemySound = pygame.mixer.Sound("enemy.wav")
+
+#Player hit sound
+pygame.mixer.music.load("player.wav")
+playerSound = pygame.mixer.Sound("player.wav")
 
 
 
@@ -361,6 +405,8 @@ shotguns = pygame.sprite.Group()
 #Flamethrowers
 flamethrowers = pygame.sprite.Group()
 
+##Sound
+background.play(loops = -1)
 
 ####Game loop
 while True:
@@ -425,6 +471,11 @@ while True:
 
     #Score
     screen.blit(font.render("Score: " + str(score), True, (255,255,255)), (5,5))
+
+    #Controls
+    screen.blit(font.render("CONTROLS", True, (255,255,255)), (5,760))
+    screen.blit(font.render("Left mouse to shoot", True, (255,255,255)), (5,790))
+    screen.blit(font.render("WASD to move", True, (255,255,255)), (5,820))
     
 
     mouse = pygame.mouse.get_pressed()
@@ -433,6 +484,10 @@ while True:
     
     #Fire pistol bullets
     if mouse[0] == True and time.time() - bulletTime > 0.2 and gunType == 1:
+        #Play sound
+        pistolSound.set_volume(0.4)
+        pistolSound.play()
+        
         bullet = Pistol(player.rect.centerx, player.rect.centery)
         bullets.add(bullet)
         all_sprites_list.add(bullet)
@@ -444,7 +499,10 @@ while True:
 
 
     #Fire shotgun bullets
-    if mouse[0] == True and time.time() - bulletTime > 0.6 and gunType == 2 and shotgunAmmo > 0:
+    elif mouse[0] == True and time.time() - bulletTime > 0.6 and gunType == 2 and shotgunAmmo > 0:
+        #Play sound
+        shotgunSound.play()
+        
         #List for spread of additional bullets
         angleSpread = (-0.5, -0.25, 0, 0.25, 0.5)
         
@@ -461,7 +519,9 @@ while True:
         bulletTime = time.time()
 
     #Fire flamethrower
-    if mouse[0] == True and time.time() - bulletTime > 0.1 and gunType == 3 and flamethrowerAmmo > 0:
+    elif mouse[0] == True and time.time() - bulletTime > 0.1 and gunType == 3 and flamethrowerAmmo > 0:
+        #Play sound
+        flamethrowerSound.play()
 
         bullet = Flamethrower(player.rect.centerx, player.rect.centery)
         bullets.add(bullet)
@@ -473,6 +533,9 @@ while True:
         bulletTime = time.time()
 
 
+    #Flamethrower sound stop
+    if mouse[0] == False or gunType != 3:
+        flamethrowerSound.stop()
         
 
 
@@ -518,6 +581,10 @@ while True:
     #Enemy bullet collision
     hits = pygame.sprite.groupcollide(enemies, bullets, True, True, pygame.sprite.collide_mask)
     for hit in hits:
+        #Play sound
+        enemySound.play()
+
+        #Increase score
         score += 10
 
         #Time reset for next wave
@@ -544,9 +611,14 @@ while True:
     
     #Damages player   
     if attacks and time.time() - enemyTime > 0.5:
+        #Play sound
+        playerSound.play()
+
+        #Reduce health
         health -= 10
         print(health)
-        
+
+        #Reset attack time
         enemyTime = time.time()
     
         
@@ -574,18 +646,25 @@ while True:
             all_sprites_list.add(f)
         
         
-
+        #Reset pickup spawn time
         pickupTime = time.time()
 
     #Medkit pickup/heal
     heals = pygame.sprite.spritecollide(player, medkits, True, pygame.sprite.collide_mask)
     if heals:
+        #Play sound
+        pickupSound.play()
+
+        #Heal player
         health = 100
 
 
     #Shotgun pickup
     spread = pygame.sprite.spritecollide(player, shotguns, True, pygame.sprite.collide_mask)
     if spread:
+        #Play sound
+        pickupSound.play()
+        
         #Change gun type and set ammo
         gunType = 2
         shotgunAmmo = 20
@@ -596,6 +675,9 @@ while True:
     #Flamethrower pickup
     fire = pygame.sprite.spritecollide(player, flamethrowers, True, pygame.sprite.collide_mask)
     if fire:
+        #Play sound
+        pickupSound.play()
+        
         #Change gun type and set ammo
         gunType = 3
         flamethrowerAmmo = 100
