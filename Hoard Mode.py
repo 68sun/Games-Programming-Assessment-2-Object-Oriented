@@ -211,8 +211,8 @@ class medkit(pygame.sprite.Sprite):
         self.image = medkitImg
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
-        self.rect.centerx = random.randint (0, 1600)
-        self.rect.centery = random.randint (0, 900)
+        self.rect.centerx = random.randint (100, 1500)
+        self.rect.centery = random.randint (100, 700)
         self.deleteTimer = time.time()
 
     def update(self):
@@ -228,8 +228,8 @@ class shotPickup(pygame.sprite.Sprite):
         self.image = shotgunPickup
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
-        self.rect.centerx = random.randint (0, 1600)
-        self.rect.centery = random.randint (0, 900)
+        self.rect.centerx = random.randint (100, 1500)
+        self.rect.centery = random.randint (100, 700)
         self.deleteTimer = time.time()
 
     def update(self):
@@ -245,8 +245,8 @@ class flamePickup(pygame.sprite.Sprite):
         self.image = flamethrowerPickup
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
-        self.rect.centerx = random.randint (0, 1600)
-        self.rect.centery = random.randint (0, 900)
+        self.rect.centerx = random.randint (100, 1500)
+        self.rect.centery = random.randint (100, 700)
         self.deleteTimer = time.time()
 
     def update(self):
@@ -407,6 +407,7 @@ flamethrowers = pygame.sprite.Group()
 
 ##Sound
 background.play(loops = -1)
+background.set_volume(0.3)
 
 ####Game loop
 while True:
@@ -438,6 +439,7 @@ while True:
         screen.blit(font.render("GAME OVER", True, (90,255,255)), (350,200))
         screen.blit(font.render("SCORE: " + str(score), True, (90,255,255)), (350,250))
         screen.blit(font.render("PRESS R TO RESTART", True, (90,255,255)), (350,300))
+        screen.blit(font.render("PRESS ESCAPE TO EXIT", True, (90,255,255)), (350,350))
 
         ##Restart game
         keystate = pygame.key.get_pressed()
@@ -464,6 +466,10 @@ while True:
             health = 100
             gunType = 1
             wave = 1
+
+        #Press escape to quit
+        if keystate[K_ESCAPE]:
+            pygame.quit()
 
 
 
@@ -594,7 +600,7 @@ while True:
     if not enemies:
         #Displays time to the next wave
         screen.blit(font.render("Time to next wave: ", True, (255,255,255)), (700,60))
-        screen.blit(font.render(str(-round(waveBreakTime - time.time(), 2)), True, (255,255,255)), (740,100))
+        screen.blit(font.render(str(round(5 + (waveBreakTime - time.time()), 2)), True, (255,255,255)), (740,100))
         
         #Starts new wave after break interval
         if time.time() - waveBreakTime > 5:
